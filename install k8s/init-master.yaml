@@ -1,0 +1,24 @@
+- name: Initialize Kubernetes Master with containerd
+  hosts: masters
+  become: yes
+  tasks:
+
+    - name: Initialize the control plane
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket /run/containerd/containerd.sock
+      register: init_output
+      ignore_errors: yes
+
+    - name: Create kube config directory
+      file:
+        path: /root/.kube
+        state: directory
+        mode: 0700
+
+    - name: Copy admin kubeconfig
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+
+    - name: Install Flannel CNI
+      command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
