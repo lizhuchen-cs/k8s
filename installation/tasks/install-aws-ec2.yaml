@@ -1,0 +1,77 @@
+- name: Install required packages
+  dnf:
+    name:
+      - wget
+      - tar
+      - iptables
+      - conntrack
+      - socat
+      - ebtables
+    state: present
+
+- name: Load kernel modules
+  copy:
+    dest: /etc/modules-load.d/containerd.conf
+    content: |
+      overlay
+      br_netfilter
+
+- name: Load modules now
+  shell: |
+    modprobe overlay
+    modprobe br_netfilter
+
+- name: Set sysctl params
+  copy:
+    dest: /etc/sysctl.d/kubernetes.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+
+- name: Apply sysctl settings
+  command: sysctl --system
+
+- name: Install containerd
+  dnf:
+    name: containerd
+    state: present
+
+- name: Generate containerd config
+  shell: |
+    mkdir -p /etc/containerd
+    containerd config default > /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
+
+- name: Enable and start containerd
+  systemd:
+    name: containerd
+    enabled: true
+    state: started
+
+- name: Add Kubernetes repo
+  copy:
+    dest: /etc/yum.repos.d/kubernetes.repo
+    content: |
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
+        
+
+- name: Install kubeadm, kubelet, and kubectl
+  dnf:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+
+- name: Enable and start kubelet
+  systemd:
+    name: kubelet
+    enabled: true
+    state: started

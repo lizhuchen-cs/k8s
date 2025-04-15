@@ -1,7 +1,12 @@
 ---
 
+# sudo containerd config default | sudo tee /etc/containerd/config.toml
+#[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  #SystemdCgroup = true
+#sudo systemctl restart containerd
+
 - name: Install container runtime and kube
-  import_tasks: install.yaml
+  import_tasks: install-aws-ec2.yaml
 
 - name: Configure Kubernetes master
   import_tasks: init-master.yaml
