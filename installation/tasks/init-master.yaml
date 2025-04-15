@@ -1,0 +1,63 @@
+- name: reset  the control plane
+  command: kubeadm reset -f
+  register: init_output
+  ignore_errors: yes
+
+
+- name: Initialize the control plane
+  command: kubeadm init --pod-network-cidr=10.244.0.0/16
+  register: init_output
+  ignore_errors: yes
+
+- name: Ensure lizhu's .kube directory exists
+  file:
+    path: "/home/{{ user }}/.kube"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0755'
+
+- name: Copy admin kubeconfig to lizhu's home
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ user }}/.kube/config"
+    remote_src: yes
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0644'
+
+- name: Ensure root's .kube directory exists
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+
+- name: Copy admin kubeconfig to root
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+    mode: '0644'
+
+- name: Install Flannel CNI
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+# untaint control plane node:
+# kubectl taint node master node-role.kubernetes.io/control-plane:NoSchedule-
+- name: Generate kubeadm join command
+  command: kubeadm token create --print-join-command
+  register: join_cmd
+  changed_when: false
+
+- name: Set join command fact for all hosts
+  set_fact:
+    kube_join_command: "{{ join_cmd.stdout }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Share join command with all hosts
+  add_host:
+    name: "{{ item }}"
+    groups: workers
+    kube_join_command: "{{ join_cmd.stdout }}"
+  loop: "{{ groups['workers'] }}"

@@ -1,0 +1,12 @@
+---
+
+- name: Install container runtime and kube
+  import_tasks: install.yaml
+
+- name: Configure Kubernetes master
+  import_tasks: init-master.yaml
+  when: "'masters' in group_names"
+
+- name: Configure Kubernetes workers
+  import_tasks: add-workers.yaml
+  when: "'workers' in group_names"

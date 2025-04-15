@@ -1,0 +1,6 @@
+- name: Disable swap
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Join the cluster using generated token
+  command: "{{ hostvars[inventory_hostname]['kube_join_command'] }}"

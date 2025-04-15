@@ -1,0 +1,7 @@
+- name: Setup Kubernetes Cluster on Debian using containerd
+  hosts: all
+  become: true
+  roles:
+    - installation
+
+    
