@@ -1,0 +1,11 @@
+controller:
+  service:
+    type: LoadBalancer
+    ports:
+      http: 80
+      https: 443
+
+  ingressClass: nginx
+  ingressClassResource:
+    name: nginx
+    controller: k8s.io/ingress-nginx

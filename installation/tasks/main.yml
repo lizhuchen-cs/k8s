@@ -1,5 +1,5 @@
 ---
-
+# k8s require to use systemd cgroup, might conflict with cgroupfs
 # sudo containerd config default | sudo tee /etc/containerd/config.toml
 #[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
   #SystemdCgroup = true

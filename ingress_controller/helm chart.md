@@ -26,7 +26,7 @@ sudo mv linux-arm64/helm /usr/local/bin/helm
 helm version
 
 
-helm install nginx-ingress ingress-nginx/ingress-nginx -f values.yaml --namespace ingress-nginx --create-namespace
+helm install nginx-ingress ingress-nginx/ingress-nginx -f values-alb.yaml --namespace ingress-nginx --create-namespace
 
 
 ```
